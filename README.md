@@ -9,199 +9,262 @@ by Robin Strudel*, Ricardo Garcia*, Ivan Laptev and Cordelia Schmid, ICCV 2021.
 
 🔥 **Segmenter is now available on [MMSegmentation](https://github.com/open-mmlab/mmsegmentation/tree/master/configs/segmenter).**
 
-## Installation
 
-Define os environment variables pointing to your checkpoint and dataset directory, put in your `.bashrc`:
-```sh
-export DATASET=/path/to/dataset/dir
+
+# Segmenter: Semi-Supervised Semantic Segmentation on Flame
+
+![Segmenter Overview](./overview.png)
+
+This repository implements **semantic segmentation using Vision Transformers (ViT)**, based on the **Segmenter architecture** ([Strudel et al., 2021](https://arxiv.org/abs/2105.05633v3)).  
+It includes a **semi-supervised** setup, supporting **Flame (fire segmentation)** dataset.
+
+---
+
+# 🌍 Vision Transformer (ViT) for Semantic Segmentation
+
+**Author:** Bijoya Bhattacharjee  
+**Affiliation:** Ph.D. Student, Department of Electrical and Computer Engineering, University of Nevada, Las Vegas (UNLV)  
+**Research Focus:** Computer Vision & Machine Learning — Wildfire Detection & Semantic Segmentation  
+
+---
+
+## 📘 Table of Contents
+
+1. [Overview](#overview)  
+2. [Background & Related Works](#background--related-works)  
+   - [Transformers in Vision](#transformers-in-vision)  
+   - [Vision Transformer (ViT)](#vision-transformer-vit)  
+   - [Segmenter: Supervised & Semi-Supervised](#segmenter-supervised--semi-supervised)  
+3. [Dataset Structure](#dataset-structure)  
+   - [Flame Dataset](#flame-dataset)  
+   - [ADE20K Dataset](#ade20k-dataset)  
+4. [Installation](#installation)  
+5. [Training Procedure](#training-procedure)  
+6. [Evaluation, Training Logs & Plots](#evaluation-training-logs--plots)  
+7. [Inference & Metrics Logging](#inference--metrics-logging)  
+8. [Original Repo Commands](#original-repo-commands)  
+9. [Repository Structure](#repository-structure)  
+10. [References](#references)  
+11. [Author & Acknowledgments](#author--acknowledgments)  
+
+---
+
+## 1️⃣ Overview
+
+- Implements **supervised & semi-supervised semantic segmentation** using ViT backbones with Mask Transformer decoder  
+- Supervised: uses **fully labeled Flame and ADE20K datasets**  
+- Semi-supervised: leverages **labeled + unlabeled images** with pseudo-labeling  
+
+**Goal:** Dense, pixel-level segmentation for wildfire detection and general scene parsing.
+
+---
+
+## 2️⃣ Background & Related Works
+
+### 🧠 Transformers in Vision
+- Self-attention mechanism for sequence modeling  
+- Extended to vision by splitting images into patches  
+
+**Paper:** [Attention Is All You Need (2017)](https://arxiv.org/abs/1706.03762)
+
+---
+
+### 🧩 Vision Transformer (ViT)
+- Split images into patches → embed as tokens  
+- CLS token aggregates global info  
+
+**Paper:** [ViT (2020)](https://arxiv.org/abs/2010.11929)  
+**Code:** [Google Research ViT](https://github.com/google-research/vision_transformer)
+
+---
+
+### 🎨 Segmenter: Supervised & Semi-Supervised
+- Mask Transformer decoder predicts dense masks  
+- Semi-supervised setup uses pseudo-labeling for unlabeled images  
+- Supports ViT Tiny, Small, Base backbones  
+
+**Paper:** [Segmenter (2021)](https://arxiv.org/abs/2105.05633v3)  
+**Code:** [https://github.com/rstrudel/segmenter](https://github.com/rstrudel/segmenter)
+
+---
+
+## 3️⃣ Dataset Structure
+
+### 🔥 Flame Dataset
+```
+Datasets/Flame/
+    ├── images/
+    │     ├── train/ (.jpg)
+    │     ├── test/ (.jpg)
+    │     └── validation/ (.jpg)
+    └── masks/
+          ├── train/ (.png)
+          ├── test/ (.png)
+          └── validation/ (.png)
+```
+- Semi-supervised: additional unlabeled images can be placed in `train_unlabeled/`  
+- Download: [Flame Dataset](https://ieee-dataport.org/open-access/flame-dataset-aerial-imagery-pile-burn-detection-using-drones-uavs)
+
+### 🏙️ ADE20K Dataset
+```
+Datasets/ADE20K/ADEChallengeData2016/
+    ├── images/
+    │     ├── training/ (.jpg)
+    │     └── validation/ (.jpg)
+    └── annotations/
+          ├── training/ (.png)
+          └── validation/ (.png)
+```
+- Download: [ADE20K Dataset](https://groups.csail.mit.edu/vision/datasets/ADE20K/)
+
+---
+
+## 4️⃣ Installation
+
+### Clone
+```bash
+git clone https://github.com/YOUR_USERNAME/segmenter-flame.git
+cd segmenter-flame
 ```
 
-Install [PyTorch 1.9](https://pytorch.org/) then `pip install .` at the root of this repository.
-
-To download ADE20K, use the following command:
-```python
-python -m segm.scripts.prepare_ade20k $DATASET
+### Option 1: Conda Environment
+```bash
+conda create -n segmenter_env python=3.8 -y
+conda activate segmenter_env
+pip install -r requirements.txt
 ```
 
-## Model Zoo
-We release models with a Vision Transformer backbone initialized from the [improved ViT](https://arxiv.org/abs/2106.10270) models.
-
-### ADE20K
-
-Segmenter models with ViT backbone:
-<table>
-  <tr>
-    <th>Name</th>
-    <th>mIoU (SS/MS)</th>
-    <th># params</th>
-    <th>Resolution</th>
-    <th>FPS</th>
-    <th colspan="3">Download</th>
-  </tr>
-<tr>
-    <td>Seg-T-Mask/16</td>
-    <td>38.1 / 38.8</td>
-    <td>7M</td>
-    <td>512x512</td>
-    <td>52.4</td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/ade20k/seg_tiny_mask/checkpoint.pth">model</a></td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/ade20k/seg_tiny_mask/variant.yml">config</a></td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/ade20k/seg_tiny_mask/log.txt">log</a></td>
-  </tr>
-<tr>
-    <td>Seg-S-Mask/16</td>
-    <td>45.3 / 46.9</td>
-    <td>27M</td>
-    <td>512x512</td>
-    <td>34.8</td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/ade20k/seg_small_mask/checkpoint.pth">model</a></td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/ade20k/seg_small_mask/variant.yml">config</a></td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/ade20k/seg_small_mask/log.txt">log</a></td>
-  </tr>
-<tr>
-    <td>Seg-B-Mask/16</td>
-    <td>48.5 / 50.0</td>
-    <td>106M</td>
-    <td>512x512</td>
-    <td>24.1</td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/ade20k/seg_base_mask/checkpoint.pth">model</a></td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/ade20k/seg_base_mask/variant.yml">config</a></td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/ade20k/seg_base_mask/log.txt">log</a></td>
-  </tr>
-<tr>
-    <td>Seg-B/8</td>
-    <td>49.5 / 50.5</td>
-    <td>89M</td>
-    <td>512x512</td>
-    <td>4.2</td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/ade20k/seg_base_patch8/checkpoint.pth">model</a></td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/ade20k/seg_base_patch8/variant.yml">config</a></td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/ade20k/seg_base_patch8/log.txt">log</a></td>
-  </tr>
-<tr>
-    <td>Seg-L-Mask/16</td>
-    <td>51.8 / 53.6</td>
-    <td>334M</td>
-    <td>640x640</td>
-    <td>-</td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/ade20k/seg_large_mask_640/checkpoint.pth">model</a></td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/ade20k/seg_large_mask_640/variant.yml">config</a></td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/ade20k/seg_large_mask_640/log.txt">log</a></td>
-  </tr>
-</table>
-
-Segmenter models with DeiT backbone:
-<table>
-  <tr>
-    <th>Name</th>
-    <th>mIoU (SS/MS)</th>
-    <th># params</th>
-    <th>Resolution</th>
-    <th>FPS</th>
-    <th colspan="3">Download</th>
-  </tr>
-<tr>
-    <td>Seg-B<span>&#8224;</span>/16</td>
-    <td>47.1 / 48.1</td>
-    <td>87M</td>
-    <td>512x512</td>
-    <td>27.3</td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/ade20k/seg_base_deit_linear/checkpoint.pth">model</a></td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/ade20k/seg_base_deit_linear/variant.yml">config</a></td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/ade20k/seg_base_deit_linear/log.txt">log</a></td>
-  </tr>
-<tr>
-    <td>Seg-B<span>&#8224;</span>-Mask/16</td>
-    <td>48.7 / 50.1</td>
-    <td>106M</td>
-    <td>512x512</td>
-    <td>24.1</td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/ade20k/seg_base_deit_mask/checkpoint.pth">model</a></td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/ade20k/seg_base_deit_mask/variant.yml">config</a></td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/ade20k/seg_base_deit_mask/log.txt">log</a></td>
-
-  </tr>
-</table>
-
-### Pascal Context
-<table>
-  <tr>
-    <th>Name</th>
-    <th>mIoU (SS/MS)</th>
-    <th># params</th>
-    <th>Resolution</th>
-    <th>FPS</th>
-    <th colspan="3">Download</th>
-  </tr>
-<tr>
-    <td>Seg-L-Mask/16</td>
-    <td>58.1 / 59.0</td>
-    <td>334M</td>
-    <td>480x480</td>
-    <td>-</td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/pascal_context/seg_large_mask/checkpoint.pth">model</a></td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/pascal_context/seg_large_mask/variant.yml">config</a></td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/pascal_context/seg_large_mask/log.txt">log</a></td>
-  </tr>
-</table>
-
-### Cityscapes
-<table>
-  <tr>
-    <th>Name</th>
-    <th>mIoU (SS/MS)</th>
-    <th># params</th>
-    <th>Resolution</th>
-    <th>FPS</th>
-    <th colspan="3">Download</th>
-  </tr>
-<tr>
-    <td>Seg-L-Mask/16</td>
-    <td>79.1 / 81.3</td>
-    <td>322M</td>
-    <td>768x768</td>
-    <td>-</td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/cityscapes/seg_large_mask/checkpoint.pth">model</a></td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/cityscapes/seg_large_mask/variant.yml">config</a></td>
-    <td><a href="https://www.rocq.inria.fr/cluster-willow/rstrudel/segmenter/checkpoints/cityscapes/seg_large_mask/log.txt">log</a></td>
-  </tr>
-</table>
-
-## Inference
-
-Download one checkpoint with its configuration in a common folder, for example `seg_tiny_mask`.
-
-You can generate segmentation maps from your own data with:
-```python
-python -m segm.inference --model-path seg_tiny_mask/checkpoint.pth -i images/ -o segmaps/ 
+### Option 2: PyTorch + pip install
+1. Install [PyTorch 1.9](https://pytorch.org/)  
+2. Run at repo root:
+```bash
+pip install .
 ```
 
-To evaluate on ADE20K, run the command:
-```python
-# single-scale evaluation:
+### Dataset Path
+```bash
+export DATASET=/path/to/Datasets/Flame
+```
+
+---
+
+## 5️⃣ Training Procedure
+
+### Supervised Training
+```bash
+python3 train.py \
+  --dataset flame \
+  --backbone vit_tiny_patch16_384 \
+  --decoder mask_transformer \
+  --batch-size 8 \
+  --epochs 50 \
+  --learning-rate 0.0001 \
+  --log-dir ./logs/Flame_ViT_Tiny/
+```
+
+### Semi-Supervised Training
+```bash
+python3 train_semi.py \
+  --dataset flame \
+  --backbone vit_tiny_patch16_384 \
+  --decoder mask_transformer \
+  --batch-size 8 \
+  --epochs 50 \
+  --learning-rate 0.0001 \
+  --labeled_ratio 0.5 \
+  --log-dir ./logs/Flame_Semi_ViT_Tiny/
+```
+
+- Pseudo-labels are used for unlabeled images  
+- `--labeled_ratio` controls fraction of labeled images  
+
+---
+
+## 6️⃣ Evaluation, Training Logs & Plots
+
+### Training Logging
+- **Loss Plot (`training_losses.png`)** shows:  
+  1. Train Cross-Entropy Loss (CE)  
+  2. Train Dice Loss  
+  3. Supervised Loss  
+  4. Unsupervised Loss  
+  5. Total Loss  
+  6. Validation Loss  
+
+- **CSV Logging** contains per-epoch metrics:  
+  - Pixel Accuracy, Mean Pixel Accuracy  
+  - Mean IoU, FWIoU  
+  - Per-Class F1 (Dice), Precision, Recall  
+  - Per-Class IoU  
+
+**Saved in `--log-dir`**
+
+### Sample Training Result (Semi-Supervised Flame, Epoch 24)
+| epoch | CE_loss | Dice_loss | Sup_loss | Unsup_loss | Total_loss | Val_loss | Pixel_Acc | Mean_Acc | Mean_IoU | FWIoU | F1_class0 | F1_class1 | Precision_class0 | Precision_class1 | Recall_class0 | Recall_class1 | IoU_class0 | IoU_class1 | PerClassDice_0 | PerClassDice_1 |
+|-------|---------|-----------|----------|------------|------------|----------|-----------|----------|----------|-------|------------|------------|-----------------|-----------------|---------------|---------------|------------|------------|----------------|----------------|
+| 24    | 0.00908 | 0.81753   | 0.00908  | 0.00378    | 0.01097    | 0.00979  | 0.99731   | 0.87735  | 0.81102  | 0.99508 | 0.99864    | 0.76904    | 0.99854         | 0.78259         | 0.99875       | 0.75596       | 0.99729    | 0.62475    | 0.99864        | 0.73110        |
+
+---
+
+## 7️⃣ Inference & Metrics Logging
+
+### Semi-Supervised Inference
+```bash
+python3 inference_semi.py \
+  --image /path/to/custom_image.jpg \
+  --checkpoint ./logs/Flame_Semi_ViT_Tiny/checkpoint.pth \
+  --backbone vit_tiny_patch16_384 \
+  --decoder mask_transformer \
+  --output ./inference_results/ \
+  --overlay
+```
+
+- Generates segmentation masks  
+- `--overlay` option shows predicted mask over original image  
+- **CSV metrics** include: Pixel_Acc, Mean_Acc, Mean_IoU, FWIoU, Dice, PerClassDice, Precision, Recall, F1  
+- **Side-by-side visualizations:** left = GT mask, right = prediction  
+
+### Sample Inference Result
+| Pixel_Acc | Mean_Acc | Mean_IoU | FWIoU   | Dice      | PerClassDice             | Precision | Recall   | F1       |
+|-----------|----------|----------|---------|-----------|--------------------------|-----------|---------|----------|
+| 0.99599   | 0.70524  | 0.68798  | 0.99230 | 0.77434   | [0.99799, 0.55070]      | 0.91543   | 0.70524 | 0.77434  |
+
+**Per-Class Metrics:**
+| ID | Name       | Acc    | IoU    | Dice   | Precision | Recall  | F1     |
+|----|------------|--------|--------|--------|-----------|---------|--------|
+| 0  | background | 0.9996 | 0.9973 | 0.99799 | 0.9967    | 0.9996  | 0.99799 |
+| 1  | fire       | 0.5407 | 0.5507 | 0.5507  | 0.9211    | 0.5407  | 0.5507 |
+
+---
+
+## 8️⃣ Original Repo Commands
+
+### Inference
+```bash
+python -m segm.inference --model-path seg_tiny_mask/checkpoint.pth -i images/ -o segmaps/
+```
+
+### ADE20K Evaluation
+```bash
+# single-scale
 python -m segm.eval.miou seg_tiny_mask/checkpoint.pth ade20k --singlescale
-# multi-scale evaluation:
+# multi-scale
 python -m segm.eval.miou seg_tiny_mask/checkpoint.pth ade20k --multiscale
 ```
 
-## Train
-
-Train `Seg-T-Mask/16` on ADE20K on a single GPU:
-```python
+### Training (ADE20K)
+```bash
 python -m segm.train --log-dir seg_tiny_mask --dataset ade20k \
   --backbone vit_tiny_patch16_384 --decoder mask_transformer
 ```
 
-To train `Seg-B-Mask/16`, simply set `vit_base_patch16_384` as backbone and launch the above command using a minimum of 4 V100 GPUs (~12 minutes per epoch) and up to 8 V100 GPUs (~7 minutes per epoch). The code uses [SLURM](https://slurm.schedmd.com/documentation.html) environment variables.
+- For `Seg-B-Mask/16`, use `vit_base_patch16_384` and >=4 V100 GPUs  
 
-## Logs
-
-To plot the logs of your experiments, you can use
-```python
+### Logs
+```bash
 python -m segm.utils.logs logs.yml
 ```
-
-with `logs.yml` located in `utils/` with the path to your experiments logs:
+`logs.yml` example:
 ```yaml
 root: /path/to/checkpoints/
 logs:
@@ -209,59 +272,58 @@ logs:
   seg-b: seg_base_mask/log.txt
 ```
 
-## Attention Maps
+---
 
-To visualize the attention maps for `Seg-T-Mask/16` encoder layer 0 and patch `(0, 21)`, you can use:
-
-```python
-python -m segm.scripts.show_attn_map seg_tiny_mask/checkpoint.pth \ 
-images/im0.jpg output_dir/ --layer-id 0 --x-patch 0 --y-patch 21 --enc
+## 9️⃣ Repository Structure
+```
+segmenter-flame/
+├── segm/                    # Core Segmenter code
+├── train.py                 # Supervised training
+├── train_semi.py            # Semi-supervised training
+├── eval.py                  # Evaluation script
+├── inference.py             # Supervised inference
+├── inference_semi.py        # Semi-supervised inference
+├── requirements.txt         # Dependencies
+├── datasets/                # Dataset loaders
+├── logs/                    # Checkpoints, plots, CSV logs
+├── README.md                # Project documentation
+└── utils/                   # Helper scripts
 ```
 
-Different options are provided to select the generated attention maps:
-* `--enc` or `--dec`: Select encoder or decoder attention maps respectively.
-* `--patch` or `--cls`: `--patch` generates attention maps for the patch with coordinates `(x_patch, y_patch)`. `--cls` combined with `--enc` generates attention maps for the CLS token of the encoder. `--cls` combined with `--dec` generates maps for each class embedding of the decoder.
-* `--x-patch` and `--y-patch`: Coordinates of the patch to draw attention maps from. This flag is ignored when `--cls` is used.
-* `--layer-id`: Select the layer for which the attention maps are generated.
+---
 
-For example, to generate attention maps for the decoder class embeddings, you can use:
+## 🔟 References
 
-```python
-python -m segm.scripts.show_attn_map seg_tiny_mask/checkpoint.pth \
-images/im0.jpg output_dir/ --layer-id 0 --dec --cls
-```
+| Year | Paper | Authors | Link |
+|------|-------|---------|------|
+| 2017 | *Attention Is All You Need* | Vaswani et al. | [arXiv](https://arxiv.org/abs/1706.03762) |
+| 2020 | *An Image is Worth 16x16 Words* | Dosovitskiy et al. | [arXiv](https://arxiv.org/abs/2010.11929) |
+| 2021 | *Segmenter: Transformer for Semantic Segmentation* | Strudel et al. | [arXiv](https://arxiv.org/abs/2105.05633v3) |
+| 2021 | *Segmenter GitHub* | Strudel et al. | [GitHub](https://github.com/rstrudel/segmenter) |
+| 2022 | *FLAME: Fire Segmentation Dataset* | IEEE Dataport | [Dataset](https://ieee-dataport.org/open-access/flame-dataset-aerial-imagery-pile-burn-detection-using-drones-uavs) |
+| 2017 | *ADE20K Benchmark* | Zhou et al. | [Dataset](https://groups.csail.mit.edu/vision/datasets/ADE20K/) |
 
-Attention maps for patch `(0, 21)` in `Seg-L-Mask/16` encoder layers 1, 4, 8, 12 and 16: 
+---
 
-![Attention maps of patch x=8 and y=21 and encoder layers 1, 4, 8, 12 and 16](./attn_maps_enc.png)
+## 🔟 Author & Acknowledgments
 
-Attention maps for the class embeddings in `Seg-L-Mask/16` decoder layer 0: 
+**Author:**  
+👩‍💻 Bijoya Bhattacharjee  
+Ph.D. Student — Electrical & Computer Engineering, UNLV  
 
-![Attention maps of cls tokens 7, 15, 18, 22, 36 and 57 and Mask decoder layer 0](./attn_maps_dec.png)
+**Research Topics:**  
+🔥 Wildfire Detection & Segmentation  
+🧠 Vision Transformers & Semi-Supervised Learning  
+🛰️ Remote Sensing & Multimodal Data  
 
-## Video Segmentation
+**Acknowledgments:**  
+- Built on **Segmenter (Strudel et al., 2021)**  
+- Uses [timm](https://github.com/rwightman/pytorch-image-models) & [mmsegmentation](https://github.com/open-mmlab/mmsegmentation)  
+- Semi-supervised framework enables ViT to learn from unlabeled UAV images  
 
-Zero shot video segmentation on [DAVIS](https://davischallenge.org/) video dataset with Seg-B-Mask/16 model trained on [ADE20K](https://groups.csail.mit.edu/vision/datasets/ADE20K/).
+> *“Leveraging unlabeled data, ViT learns richer features for wildfire segmentation, reducing annotation cost without sacrificing accuracy.”*
 
-<p align="middle">
-  <img src="https://github.com/rstrudel/segmenter/blob/master/gifs/choreography.gif" width="350">
-  <img src="https://github.com/rstrudel/segmenter/blob/master/gifs/city-ride.gif" width="350">
-</p>
-<p align="middle">
-  <img src="https://github.com/rstrudel/segmenter/blob/master/gifs/car-competition.gif" width="350">
-  <img src="https://github.com/rstrudel/segmenter/blob/master/gifs/breakdance-flare.gif" width="350">
-</p>
 
-## BibTex
-
-```
-@article{strudel2021,
-  title={Segmenter: Transformer for Semantic Segmentation},
-  author={Strudel, Robin and Garcia, Ricardo and Laptev, Ivan and Schmid, Cordelia},
-  journal={arXiv preprint arXiv:2105.05633},
-  year={2021}
-}
-```
 
 
 ## Acknowledgements
