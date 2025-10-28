@@ -221,6 +221,10 @@ python3 inference.py \
 | 0        | background | 0.9995 | 0.996 | 0.998   | 0.9965    | 0.9995  | 0.998  |
 | 1        | fire       | 0.411  | 0.380 | 0.5507  | 0.8344    | 0.411   | 0.5507 |
 
+### Example Prediction
+Ground Truth (left) vs Predicted Mask (right):
+
+![Flame Prediction](image_1054.jpg)
 
 ---
 
