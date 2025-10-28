@@ -148,21 +148,9 @@ export DATASET=/path/to/Datasets/Flame
 
 ## 5️⃣ Training Procedure
 
-### Supervised Training
-```bash
-python3 train.py \
-  --dataset flame \
-  --backbone vit_tiny_patch16_384 \
-  --decoder mask_transformer \
-  --batch-size 8 \
-  --epochs 50 \
-  --learning-rate 0.0001 \
-  --log-dir ./logs/Flame_ViT_Tiny/
-```
-
 ### Semi-Supervised Training
 ```bash
-python3 train_semi.py \
+python3 train.py \
   --dataset flame \
   --backbone vit_tiny_patch16_384 \
   --decoder mask_transformer \
@@ -208,7 +196,7 @@ python3 train_semi.py \
 
 ### Semi-Supervised Inference
 ```bash
-python3 inference_semi.py \
+python3 inference.py \
   --image /path/to/custom_image.jpg \
   --checkpoint ./logs/Flame_Semi_ViT_Tiny/checkpoint.pth \
   --backbone vit_tiny_patch16_384 \
@@ -225,7 +213,7 @@ python3 inference_semi.py \
 ### Sample Inference Result
 | Pixel_Acc | Mean_Acc | Mean_IoU | FWIoU   | Dice      | PerClassDice             | Precision | Recall   | F1       |
 |-----------|----------|----------|---------|-----------|--------------------------|-----------|---------|----------|
-| 0.99599   | 0.70524  | 0.68798  | 0.99230 | 0.77434   | [0.99799, 0.55070]      | 0.91543   | 0.70524 | 0.77434  |
+| 0.995994   | 0.70524  | 0.68798  | 0.99230 | 0.77434   | [0.99799, 0.55070]      | 0.91543   | 0.70524 | 0.77434  |
 
 **Per-Class Metrics:**
 | ID | Name       | Acc    | IoU    | Dice   | Precision | Recall  | F1     |
